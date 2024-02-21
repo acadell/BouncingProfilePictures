@@ -33,6 +33,25 @@ document.addEventListener('DOMContentLoaded', function() {
                img1.posY + img1.img.offsetHeight > img2.posY;
     }
 
+    function detectCollisionSide(img1, img2) {
+        const dx = (img1.posX + img1.img.offsetWidth / 2) - (img2.posX + img2.img.offsetWidth / 2);
+        const dy = (img1.posY + img1.img.offsetHeight / 2) - (img2.posY + img2.img.offsetHeight / 2);
+        const width = (img1.img.offsetWidth + img2.img.offsetWidth) / 2;
+        const height = (img1.img.offsetHeight + img2.img.offsetHeight) / 2;
+        const crossWidth = width * dy;
+        const crossHeight = height * dx;
+        let collision = 'none';
+
+        if (Math.abs(dx) <= width && Math.abs(dy) <= height) {
+            if (crossWidth > crossHeight) {
+                collision = (crossWidth > (-crossHeight)) ? 'bottom' : 'left';
+            } else {
+                collision = (crossWidth > -(crossHeight)) ? 'right' : 'top';
+            }
+        }
+        return collision;
+    }
+
     // Update position of all images
     function updatePositions() {
         images.forEach(function(info, index) {
@@ -50,10 +69,18 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // Check for collisions with other images
             for (let j = 0; j < images.length; j++) {
-                if (j !== index && checkCollision(info, images[j])) {
-                    info.directionX *= -1;
-                    info.directionY *= -1;
-                    break; // Only handle one collision per update to keep it simple
+                if (j !== index) {
+                    const collisionSide = detectCollisionSide(info, images[j]);
+                    if (collisionSide !== 'none') {
+                        // Handle collision based on the side
+                        if (collisionSide === 'left' || collisionSide === 'right') {
+                            info.directionX *= -1;
+                        } else if (collisionSide === 'top' || collisionSide === 'bottom') {
+                            info.directionY *= -1;
+                        }
+                        // Optionally, adjust the position slightly to prevent sticking
+                        // This could be refined with more precise adjustments
+                    }
                 }
             }
 
@@ -66,6 +93,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Initially, you can add one or more images like this:
+    createBouncingImage(profile);
     createBouncingImage(profile);
     // Add more images as needed
     // createBouncingImage('path-to-another-image.jpg');
